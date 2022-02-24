@@ -28,8 +28,62 @@ def project_value(project, today):
     return value
 
 
-def solvable(project, people_dict):
-    pass
+def assign_people(project, skills):
+    selected_people = []
+    for skill, level in project.roles.items():
+        available_people = list(skills[(skill, level)])
+        available_people.sort(key=lambda x: person_cost(x, skill))
+        selected_people.append(available_people[0])
+    return selected_people
+
+
+def person_cost(person, skill):
+    #cost = 1
+    #for skill, level in person.skills:
+    return 1
+
+
+def update_skills(people_assigned, skills, people):
+    for person in people_assigned:
+        for skill, level in people[person].items():
+            for level_counter in range(level + 1):
+                skills[(skill, level_counter)].remove(person)
+
+
+def solvable(project: parse.Project, skills):
+    for role, level in project.roles.items():
+        people_in_current_level = skills[(role, level)]
+        if people_in_current_level:
+            continue
+        return False
+    return True
+
+
+def update_current_projects(current_projects, skills, today):
+    for project, end_date in current_projects:
+        if end_date >= today:
+            current_projects.remove((project, end_date))
+            for person in project.asignees:
+                for skill, level in person.skills:
+                    for level_counter in range(level + 1):
+                        skills[(skill, level_counter)].add(person.name)
+
+
+def initialize_skills(inp):
+    skills = collections.defaultdict(set)
+    for person in inp.contributors:
+        for skill, level in person.skills.items():
+            for level_counter in range(level + 1):
+                skills[(skill, level_counter)].add(person.name)
+    return skills
+
+
+def initialize_people(inp):
+    people = {}
+    for person in inp.contributors:
+        people[person.name] = person.skills
+    return people
+
 
 @dataclass
 class Assignment:
@@ -55,30 +109,39 @@ class Solution:
 if __name__ == '__main__':
     inp = parse.read_file(sys.argv[1])
 
+    assignments = []
+    current_projects = []
+
     today = 0
     projects = inp.projects.copy()
 
-    people_dict = collections.defaultdict(set)
-    for person in inp.contributors:
-        for skill, level in person.skills:
-            for level_counter in range(level+1):
-                people_dict[(skill, level_counter)].add(person.name)
+    skills = initialize_skills(inp)
+    people = initialize_people(inp)
 
     while projects:
+
+        # Free the people that has already finished a project
+        update_current_projects(current_projects, skills, today)
+
         projects.sort(key=lambda x: project_value(x, today), reverse=True)
 
-        for p in projects:
-            if solvable(p, people_dict):
-
-
-            # Eliminar proyectos resueltos de projects
+        for project in projects:
+            if solvable(project, skills):
+                people_assigned = assign_people(project, skills)
+                update_skills(people_assigned, skills, people)
+                projects.remove(project)
+                assignment = Assignment(project.name, people_assigned)
+                assignments.append(assignment)
+                current_projects.append((assignment, today+project.duration))
 
         today += 1
 
-    solution = Solution([
-        Assignment("WebServer", ["Bob", "Anna"]),
-        Assignment("Logging", ["Anna"]),
-        Assignment("WebChat", ["Maria", "Bob"]),
-    ])
+    # solution = Solution([
+    #     Assignment("WebServer", ["Bob", "Anna"]),
+    #     Assignment("Logging", ["Anna"]),
+    #     Assignment("WebChat", ["Maria", "Bob"]),
+    # ])
+
+    solution = Solution(assignments)
 
     solution.write_to_file('../outputs/{}'.format(sys.argv[1]), inp)
