@@ -2,16 +2,12 @@ from dataclasses import dataclass
 from collections import defaultdict
 from typing import Dict, List, Any
 
-@dataclass
-class Role:
-    language: str
-    level: int
 
 @dataclass
 class Contributor:
     name: str
     N: int
-    skills: List[Role]
+    skills: Dict[str, int]
 
 @dataclass
 class Project:
@@ -20,7 +16,7 @@ class Project:
     score: int
     best_before: int
     R: int
-    roles: List[Role]
+    roles: Dict[str, int]
 
 @dataclass
 class Input:
@@ -39,13 +35,13 @@ def read_file(name: str) -> Input:
             name_and_N = f.readline().split(" ")
             contributor_name = name_and_N[0]
             N = int(name_and_N[1])
-            skills = []
+            skills = defaultdict(int)
 
             for _ in range(N):
                 raw_skill = f.readline().split(" ")
                 skill_name = raw_skill[0]
                 level = int(raw_skill[1])
-                skills.append(Role(skill_name, level))
+                skills[skill_name] = level
             
             contributors.append(Contributor(contributor_name, N, skills))
         
@@ -58,12 +54,12 @@ def read_file(name: str) -> Input:
             best_before = int(name_and_stuff[3])
             R = int(name_and_stuff[4])
 
-            roles = []
+            roles = defaultdict(int)
             for _ in range(R):
                 role_and_level = f.readline().split()
                 role_name = role_and_level[0]
                 role_level = int(role_and_level[1])
-                roles.append(Role(role_name, role_level))
+                roles[role_name] = role_level
             
             projects.append(Project(project_name, duration, score, best_before, R, roles))
 
