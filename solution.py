@@ -59,14 +59,14 @@ def solvable(project: parse.Project, skills):
     return True
 
 
-def update_current_projects(current_projects, skills, today):
+def update_current_projects(current_projects, skills, today, people):
     for project, end_date in current_projects:
-        if end_date >= today:
+        if end_date == today:
             current_projects.remove((project, end_date))
-            for person in project.asignees:
-                for skill, level in person.skills:
+            for person in project.assignees:
+                for skill, level in people[person].items():
                     for level_counter in range(level + 1):
-                        skills[(skill, level_counter)].add(person.name)
+                        skills[(skill, level_counter)].add(person)
 
 
 def initialize_skills(inp):
@@ -118,23 +118,29 @@ if __name__ == '__main__':
     skills = initialize_skills(inp)
     people = initialize_people(inp)
 
-    while projects:
-
+    while projects and today < 100:
+        print(today)
         # Free the people that has already finished a project
-        update_current_projects(current_projects, skills, today)
 
         projects.sort(key=lambda x: project_value(x, today), reverse=True)
 
         for project in projects:
+            #print(solvable(project, skills))
             if solvable(project, skills):
                 people_assigned = assign_people(project, skills)
+                #print(people_assigned)
                 update_skills(people_assigned, skills, people)
+                #print(skills)
                 projects.remove(project)
                 assignment = Assignment(project.name, people_assigned)
                 assignments.append(assignment)
                 current_projects.append((assignment, today+project.duration))
+                print("CURRENT PROJECTS: ", current_projects)
+        # print("PROJECTS: ", projects)
 
+        update_current_projects(current_projects, skills, today, people)
         today += 1
+
 
     # solution = Solution([
     #     Assignment("WebServer", ["Bob", "Anna"]),
