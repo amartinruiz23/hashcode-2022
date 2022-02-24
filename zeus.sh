@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-pushd inputs
+pushd input_data
 time python3 ../solution.py a_an_example.in.txt
 time python3 ../solution.py b_better_start_small.in.txt
 time python3 ../solution.py c_collaboration.in.txt
