@@ -28,12 +28,14 @@ def project_value(project, today):
     return value
 
 
-def assign_people(project, skills):
+def assign_people(project, skills, people):
     selected_people = []
     for skill, level in project.roles.items():
         available_people = list(skills[(skill, level)])
         available_people.sort(key=lambda x: person_cost(x, skill))
         selected_people.append(available_people[0])
+        if people[available_people[0]][skill] == level:
+            people[available_people[0]][skill] = level + 1
     return selected_people
 
 
@@ -47,7 +49,8 @@ def update_skills(people_assigned, skills, people):
     for person in people_assigned:
         for skill, level in people[person].items():
             for level_counter in range(level + 1):
-                skills[(skill, level_counter)].remove(person)
+                if skills[(skill, level_counter)].__contains__(person):
+                    skills[(skill, level_counter)].remove(person)
 
 
 def solvable(project: parse.Project, skills):
@@ -127,7 +130,7 @@ if __name__ == '__main__':
         for project in projects:
             #print(solvable(project, skills))
             if solvable(project, skills):
-                people_assigned = assign_people(project, skills)
+                people_assigned = assign_people(project, skills, people)
                 #print(people_assigned)
                 update_skills(people_assigned, skills, people)
                 #print(skills)
@@ -135,8 +138,9 @@ if __name__ == '__main__':
                 assignment = Assignment(project.name, people_assigned)
                 assignments.append(assignment)
                 current_projects.append((assignment, today+project.duration))
-                print("CURRENT PROJECTS: ", current_projects)
+
         # print("PROJECTS: ", projects)
+        print("CURRENT PROJECTS: ", current_projects)
 
         update_current_projects(current_projects, skills, today, people)
         today += 1
