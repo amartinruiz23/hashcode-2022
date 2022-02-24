@@ -36,6 +36,7 @@ def assign_people(project, skills, people):
         selected_people.append(available_people[0])
         if people[available_people[0]][skill] == level:
             people[available_people[0]][skill] = level + 1
+        available_people.remove(available_people[0])
     return selected_people
 
 
@@ -121,12 +122,15 @@ if __name__ == '__main__':
     skills = initialize_skills(inp)
     people = initialize_people(inp)
 
-    while projects and today < 100:
+    counter = 0
+    while projects and counter < 100:
+        counter += 1
         print(today)
+        print(counter)
         # Free the people that has already finished a project
 
         projects.sort(key=lambda x: project_value(x, today), reverse=True)
-
+        #print('PROJECTS: ', projects)
         for project in projects:
             #print(solvable(project, skills))
             if solvable(project, skills):
@@ -138,9 +142,10 @@ if __name__ == '__main__':
                 assignment = Assignment(project.name, people_assigned)
                 assignments.append(assignment)
                 current_projects.append((assignment, today+project.duration))
+                counter = 0
 
         # print("PROJECTS: ", projects)
-        print("CURRENT PROJECTS: ", current_projects)
+        #print("CURRENT PROJECTS: ", current_projects)
 
         update_current_projects(current_projects, skills, today, people)
         today += 1
@@ -154,4 +159,5 @@ if __name__ == '__main__':
 
     solution = Solution(assignments)
 
+    print(assignments)
     solution.write_to_file('../outputs/{}'.format(sys.argv[1]), inp)
